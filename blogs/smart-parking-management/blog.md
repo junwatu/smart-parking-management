@@ -1,6 +1,6 @@
 # Building a Smart Parking Management System with GridDB Native and Node.js
 
-<!-- Draft status: application and offline tests are available. Live Cloud verification and publication screenshots remain to be completed. No publication repository URL has been assigned. -->
+<!-- Draft status: application and offline tests are available. Live Cloud verification and parking-specific publication screenshots remain to be completed. The source repository is private; arrange reader access or publish a reviewed public version before publishing this tutorial. -->
 
 <!-- Publication asset: assets/blog-cover.jpeg — parking-specific cover. -->
 
@@ -106,12 +106,13 @@ The setup script supplies the public libraries; it does not download the license
 
 ## How to Run
 
-### 1. Enter the application workspace
+### 1. Clone the repository and enter the application workspace
 
-Start in the supplied `smart-parking-management` project folder:
+The application source and blog draft are in [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). The repository is currently private, so your GitHub account must have access and Git must be authenticated before cloning.
 
 ```bash
-cd apps
+git clone https://github.com/junwatu/smart-parking-management.git
+cd smart-parking-management/apps
 npm install
 ```
 
@@ -631,6 +632,7 @@ This application connects Node.js to GridDB Native through a persistent Python w
 
 ## References
 
+- [Smart Parking application source (private repository; access required)](https://github.com/junwatu/smart-parking-management)
 - [GridDB Python client source](https://github.com/griddb/python_client)
 - [GridDB Python getting started](https://docs.griddb.net/gettingstarted/python.html)
 - [GridDB Cloud public native connection](https://www.griddb.net/en/blog/connecting-to-griddb-cloud-v3-2-from-your-local-dev-environment-no-vpn-no-vnet-peering/)
