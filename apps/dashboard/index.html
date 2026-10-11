@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parkside · Smart Parking</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Parkside home"><span class="brand-icon">P</span><span>parkside<span class="brand-sub">PARKING OPERATIONS</span></span></a>
+    <div class="header-meta"><span class="location">Central Garage · UTC reporting</span><span id="mode" class="pill">Connecting</span></div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">OPERATIONS OVERVIEW</p><h1>A clear view of every space.</h1><p class="muted">Live availability, vehicle sessions and occupancy trends.</p></div>
+      <div class="intro-actions"><span id="updated" class="muted">Waiting for data</span><button id="refresh" class="button secondary">Refresh</button></div>
+    </section>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section class="metrics" aria-label="Parking statistics">
+      <article class="metric"><p>Available spaces</p><strong id="available">—</strong><span class="accent">Ready for arrivals</span></article>
+      <article class="metric"><p>Occupied spaces</p><strong id="occupied">—</strong><span id="capacity">of 24 total spaces</span></article>
+      <article class="metric"><p>Occupancy rate</p><strong id="occupancy">—</strong><span>Based on active sessions</span></article>
+      <article class="metric"><p>Fees recorded today</p><strong id="revenue">—</strong><span id="completed">UTC · completed sessions</span></article>
+    </section>
+    <div class="workspace">
+      <section class="panel lot-panel">
+        <div class="panel-heading"><div><h2>Parking floor</h2><p class="muted">Select an available space to register a vehicle.</p></div><div class="legend"><span><i class="dot available"></i>Available</span><span><i class="dot occupied"></i>Occupied</span></div></div>
+        <div id="spaces" class="floor" aria-live="polite"></div>
+        <div class="lot-footer"><span>Accessible spaces: A01, B01, C01</span><span>Entry →</span></div>
+      </section>
+      <aside class="panel arrival-panel">
+        <p class="eyebrow">NEW ARRIVAL</p><h2>Register a vehicle</h2><p class="muted">Choose a space, then enter a vehicle tag.</p>
+        <form id="arrival-form">
+          <label for="space-select">Parking space</label><select id="space-select" required><option value="">Choose a space</option></select>
+          <label for="vehicle-tag">Vehicle tag</label><input id="vehicle-tag" placeholder="e.g. B 2048 PK" maxlength="16" required autocomplete="off">
+          <p class="form-note">Letters, numbers, spaces and hyphens. Fees use the space’s rate per started hour.</p>
+          <button id="arrival-submit" class="button primary" type="submit">Register arrival</button>
+        </form>
+        <div class="simulator"><div><h3>Sensor simulation</h3><p class="muted">Generate a parking event every 5 seconds.</p></div><button id="simulator" class="button secondary">Start simulator</button><p class="form-note">Simulator departures apply only to its own vehicles.</p></div>
+      </aside>
+    </div>
+    <div class="lower-grid">
+      <section class="panel"><div class="panel-heading"><div><h2>Occupancy over time</h2><p class="muted">Latest 24 hours · up to 1,000 points</p></div><span id="chart-note" class="muted"></span></div><div class="chart-wrap"><svg id="history-chart" viewBox="0 0 720 210" role="img" aria-label="Parking occupancy history"></svg></div><p id="history-caption" class="chart-caption muted">Start the simulator to collect history.</p></section>
+      <section class="panel"><div class="panel-heading"><div><h2>Recent activity</h2><p class="muted">Arrivals and departures</p></div></div><div id="events" class="events"></div></section>
+    </div>
+    <section class="panel sessions-panel"><div class="panel-heading"><div><h2>Active parking sessions</h2><p class="muted">Departures close sessions and record the final fee.</p></div><span id="session-count" class="pill">0 vehicles</span></div><div class="table-scroll"><table><thead><tr><th>Vehicle</th><th>Space</th><th>Arrived</th><th>Duration</th><th>Estimated fee</th><th>Action</th></tr></thead><tbody id="sessions"></tbody></table></div></section>
+    <footer>Parkside · GridDB Native + Node.js application draft <span>Refreshes every 5 seconds</span></footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "griddb-smart-parking-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent Smart Parking tutorial using the GridDB native Python bridge",
+  "workspaces": ["dashboard", "native-bridge"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "setup": "npm install",
+    "setup:mac": "npm run setup:mac --workspace=native-bridge",
+    "doctor": "node scripts/doctor.mjs",
+    "init": "node scripts/run.mjs init",
+    "seed": "node scripts/run.mjs seed",
+    "dev:griddb": "node scripts/run.mjs health",
+    "api": "node scripts/run.mjs server",
+    "dev": "node scripts/run.mjs server",
+    "dev:live": "node scripts/run.mjs server",
+    "dev:demo": "node scripts/run.mjs demo",
+    "check": "node scripts/check.mjs",
+    "test": "node --test native-bridge/test/*.test.js"
+  }
+}

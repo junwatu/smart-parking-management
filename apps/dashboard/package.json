@@ -1,0 +1,6 @@
+{
+  "name": "smart-parking-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser dashboard served by the Node API; no frontend build needed"
+}

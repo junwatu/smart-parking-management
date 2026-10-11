@@ -1,0 +1,11 @@
+{
+  "name": "smart-parking-native-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "server": "node src/server.js",
+    "start": "node src/index.js health",
+    "setup:mac": "bash scripts/setup-macos.sh"
+  }
+}
