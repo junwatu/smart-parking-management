@@ -17,9 +17,10 @@ The original `notification-provider-url.png` and `network-access.png` are reused
 
 ## Remaining assets
 
+The generated `blog-cover.png` is embedded at the top of the article. It is conceptual cover artwork, not an application screenshot or evidence of native Cloud validation. Generation details and the final prompt are recorded in `blog-cover-prompt.md`.
+
 | Planned file | Article section | What to capture or create |
 | --- | --- | --- |
-| `blog-cover.jpeg` | Cover | Parking-specific article artwork |
 | `dashboard.png` | What We Will Build | Verified native dashboard with available and occupied spaces |
 | `system-architecture.webp` | System Architecture | Browser, Node API, Python worker, JVM and native GridDB path |
 | `griddb-schema.webp` | GridDB Schema | Space/session/event Collections and occupancy TimeSeries |

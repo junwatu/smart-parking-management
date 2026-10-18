@@ -1,8 +1,5 @@
 # Building a Smart Parking Management System with GridDB Native and Node.js
-
-<!-- Draft status: application and offline tests are available. Live Cloud verification and parking-specific publication screenshots remain to be completed. The source repository is private; arrange reader access or publish a reviewed public version before publishing this tutorial. -->
-
-<!-- Publication asset: assets/blog-cover.jpeg — parking-specific cover. -->
+![Building a Smart Parking Management System with GridDB Native and Node.js — illustrated parking lot and database](assets/blog-cover.png)
 
 ## Table of Contents
 
@@ -89,7 +86,6 @@ Use a GridDB Cloud service with a supported public native route, such as the Clo
 4. Extract `gridstore-advanced.jar` and place it in `apps/native-bridge/lib/`.
 
 The setup script supplies the public libraries; it does not download the licensed Cloud JAR. Keep the JAR and real credentials outside a public repository.
-
 ![GridDB Cloud Notification Provider URL location](assets/notification-provider-url.png)
 
 *The cluster overview shows the Notification Provider URL for external connections. This setup screenshot is reused from the energy-monitor example; use your own cluster's connection settings.*
@@ -102,7 +98,6 @@ The setup script supplies the public libraries; it does not download the license
 
 *GridDB Cloud's library download location. This generic setup screenshot is reused from the energy-monitor example; portal layout and available downloads may differ for your service.*
 
-<!-- Publication review: notification-provider-url.png and network-access.png are reused unchanged at the author's request. Existing redaction marks leave portions of identifying details and URL tokens visible. Fully obscure complete sensitive fields before public publication. -->
 
 ## How to Run
 
