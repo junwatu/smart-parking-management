@@ -9,6 +9,7 @@
   "scripts": {
     "setup": "npm install",
     "setup:mac": "npm run setup:mac --workspace=native-bridge",
+    "install:cloud-jar": "bash native-bridge/scripts/install-cloud-jar.sh",
     "doctor": "node scripts/doctor.mjs",
     "init": "node scripts/run.mjs init",
     "seed": "node scripts/run.mjs seed",

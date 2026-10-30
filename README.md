@@ -67,7 +67,14 @@ npm run setup:mac
 cp native-bridge/.env.example native-bridge/.env
 ```
 
-In your Cloud portal, generate the Notification Provider URL, configure the app’s public outbound IP in the access list, and download the compatible Cloud Java library. Place `gridstore-advanced.jar` in `apps/native-bridge/lib/`. The setup script supplies the other three JARs. Use the library versions supported by your Cloud service; do not publish the licensed JAR in a public repository.
+In your Cloud portal, generate the Notification Provider URL, configure the app’s public outbound IP in the access list, and download the compatible Cloud Java library. Install the JAR from the downloaded RPM or an extracted JAR (quote paths containing spaces):
+
+```bash
+npm run install:cloud-jar -- /path/to/griddb-ee-java-lib-5.9.0-linux.x86_64.rpm
+# Or: npm run install:cloud-jar -- /path/to/gridstore-advanced.jar
+```
+
+The installer requires Bash and, for RPMs, `bsdtar` or both `rpm2cpio` and `cpio`. It copies the library to `apps/native-bridge/lib/gridstore-advanced.jar`; the setup script supplies the other three JARs. Use the library versions supported by your Cloud service; do not publish the licensed JAR in a public repository.
 
 Edit `native-bridge/.env` using real values:
 

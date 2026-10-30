@@ -2,7 +2,7 @@ node_modules/
 .env
 .venv/
 .build/
-lib/*.jar
+**/lib/*.jar
 __pycache__/
 *.pyc
 .DS_Store
