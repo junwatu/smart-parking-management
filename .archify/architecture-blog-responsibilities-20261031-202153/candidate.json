@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Smart Parking: five system responsibilities",
+    "locale": "en",
+    "output": ".archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:junwatu/smart-parking-management.git",
+      "revision": "24191840fc5c60810497b715926915f3041a4a72",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "inputs",
+      "type": "frontend",
+      "label": "Parking data source",
+      "sublabel": "Manual input + simulation controls",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 134,
+          "end_line": 154
+        },
+        {
+          "path": "apps/native-bridge/src/parking-service.js",
+          "line": 36,
+          "end_line": 49
+        }
+      ]
+    },
+    {
+      "id": "node",
+      "type": "backend",
+      "label": "Node.js application",
+      "sublabel": "Dashboard / API / simulator timer",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/src/server.js",
+          "line": 35,
+          "end_line": 73
+        },
+        {
+          "path": "apps/native-bridge/src/parking-service.js",
+          "line": 27,
+          "end_line": 53
+        },
+        {
+          "path": "apps/native-bridge/src/griddb-client.js",
+          "line": 94,
+          "end_line": 119
+        }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Python GridDB worker",
+      "sublabel": "NDJSON dispatch / JVM / store",
+      "pos": [
+        800,
+        40
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 13,
+          "end_line": 29
+        },
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 44,
+          "end_line": 82
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "type": "backend",
+      "label": "Session and telemetry logic",
+      "sublabel": "parking.py: visits / fees / projections",
+      "pos": [
+        800,
+        300
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 127,
+          "end_line": 188
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 206,
+          "end_line": 214
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 59,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "GridDB Cloud",
+      "sublabel": "Collections + TimeSeries",
+      "pos": [
+        420,
+        300
+      ],
+      "size": [
+        240,
+        86
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 5,
+          "end_line": 18
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 59,
+          "end_line": 85
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "One persistent Python process",
+      "wraps": [
+        "worker",
+        "logic"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "input",
+      "from": "inputs",
+      "to": "node",
+      "label": "HTTP / JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "bridge",
+      "from": "node",
+      "to": "worker",
+      "label": "NDJSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dispatch",
+      "from": "worker",
+      "to": "logic",
+      "label": "Dispatch operation",
+      "variant": "emphasis"
+    },
+    {
+      "id": "persist",
+      "from": "logic",
+      "to": "db",
+      "label": "Native protocol",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Inputs and application",
+      "items": [
+        "Manual arrivals, departures and simulator controls enter through the dashboard.",
+        "Node.js serves the UI, validates requests and matches worker replies.",
+        "Its optional timer requests a simulated transition every five seconds; Python chooses the transition."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One worker, two responsibilities",
+      "items": [
+        "The worker starts the JVM, loads JARs and owns the GridDB store.",
+        "parking.py runs inside that same process; it is not a separate service.",
+        "Operations execute serially. Native timestamps are converted for JSON replies."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Persistence and responses",
+      "items": [
+        "Collections hold spaces, sessions and audit events. TimeSeries hold lot and per-space occupancy.",
+        "Sessions determine live availability; telemetry records projections of that state.",
+        "Responses travel back through Python and Node.js to the browser. Event and telemetry writes are not atomic with session writes."
+      ]
+    }
+  ]
+}

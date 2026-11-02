@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/candidate.json",
+    "sha256": "ec4938fa600c3e160ddce94fcc844a72a8e86c46fec6fc94bc0c53579d9ada6c",
+    "bytes": 5368
+  },
+  "artifact": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.html",
+    "sha256": "4092f2530e7a5f5de3762deaae3435a68a5ac33c8a74d270a82da5f754bd2483",
+    "bytes": 837148
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.finalize.json",
+    "summaryReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.finalize-summary.json",
+    "browserCheckReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-31T13:13:06.611Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1916,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Smart Parking: native-mode system architecture",
+    "output": ".archify/architecture-parking-system-20261031-201947/parking-system.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:junwatu/smart-parking-management.git",
+      "revision": "24191840fc5c60810497b715926915f3041a4a72",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "dashboard",
+      "type": "frontend",
+      "label": "Web dashboard",
+      "sublabel": "HTML / CSS / JavaScript",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 14,
+          "end_line": 18
+        },
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 109,
+          "end_line": 146
+        }
+      ]
+    },
+    {
+      "id": "node-api",
+      "type": "backend",
+      "label": "Node.js API",
+      "sublabel": "Routes + parking service",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/src/server.js",
+          "line": 35,
+          "end_line": 73
+        },
+        {
+          "path": "apps/native-bridge/src/parking-service.js",
+          "line": 27,
+          "end_line": 53
+        },
+        {
+          "path": "apps/native-bridge/src/griddb-client.js",
+          "line": 49,
+          "end_line": 63
+        }
+      ]
+    },
+    {
+      "id": "python-worker",
+      "type": "backend",
+      "label": "Python worker",
+      "sublabel": "Parking + JPype / JVM client",
+      "pos": [
+        400,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 13,
+          "end_line": 29
+        },
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 53,
+          "end_line": 78
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 127,
+          "end_line": 188
+        }
+      ]
+    },
+    {
+      "id": "griddb",
+      "type": "database",
+      "label": "GridDB Cloud",
+      "sublabel": "Collections + TimeSeries",
+      "pos": [
+        780,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 5,
+          "end_line": 18
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 59,
+          "end_line": 85
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "Notification Provider",
+      "sublabel": "HTTPS discovery URL",
+      "pos": [
+        400,
+        490
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 24,
+          "end_line": 29
+        },
+        {
+          "path": "README.md",
+          "line": 111,
+          "end_line": 122
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Application host: Node.js + child process",
+      "wraps": [
+        "node-api",
+        "python-worker"
+      ],
+      "pad": 25
+    }
+  ],
+  "connections": [
+    {
+      "id": "http",
+      "from": "dashboard",
+      "to": "node-api",
+      "label": "HTTP / JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "stdio",
+      "from": "node-api",
+      "to": "python-worker",
+      "label": "NDJSON over stdio",
+      "variant": "emphasis"
+    },
+    {
+      "id": "native",
+      "from": "python-worker",
+      "to": "griddb",
+      "label": "Native reads / writes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "discovery",
+      "from": "python-worker",
+      "to": "provider",
+      "label": "Discover cluster"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Browser and API",
+      "items": [
+        "Node.js serves the dashboard assets and handles browser HTTP requests.",
+        "The dashboard polls availability, events and history every five seconds.",
+        "An optional timer in the parking service generates simulated visits."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Native bridge",
+      "items": [
+        "Node.js owns one persistent Python child process and matches NDJSON responses by request ID.",
+        "Python serializes operations and invokes the Java client through JPype.",
+        "Replies return through the same bridge; GridDB operations use its native protocol."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Data and scope",
+      "items": [
+        "Collections store spaces, sessions and events; TimeSeries store occupancy and per-space projections.",
+        "Sessions are authoritative; projection writes are separate and can return warnings.",
+        "Native-mode overview. The optional in-memory demo bypasses Python and GridDB."
+      ]
+    }
+  ]
+}

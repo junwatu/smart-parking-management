@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/candidate.json",
+    "sha256": "b2b35d726e35f119c8fd47a644b6af8f5907c13f02d11e3395e3cef508b53138",
+    "bytes": 5874
+  },
+  "artifact": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.html",
+    "sha256": "e127416fd1525bec6b43c4ff4e840c0201d1f5e00faa1c6c75f7e7f1c422f258",
+    "bytes": 836862
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/review-2/parking-request.finalize.json",
+    "summaryReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/review-2/parking-request.finalize-summary.json",
+    "browserCheckReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/review-2/parking-request.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-31T13:13:06.611Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2160,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

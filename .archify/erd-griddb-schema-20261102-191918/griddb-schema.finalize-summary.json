@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "erd",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/candidate.json",
+    "sha256": "243ed63df9817e8f3c2944b8b2906ae7aef55c4c1081280ec227a0b60b23a6a0",
+    "bytes": 7003
+  },
+  "artifact": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/griddb-schema.html",
+    "sha256": "81050a46cd481c24a17c5316d0602d11471d875ebbb08099b95e165c565e836c",
+    "bytes": 852659
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/griddb-schema.finalize.json",
+    "summaryReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/griddb-schema.finalize-summary.json",
+    "browserCheckReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/griddb-schema.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-02T12:20:15.862Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2279,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

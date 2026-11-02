@@ -28,6 +28,11 @@ function renderSpaces() {
   const select = $('space-select');
   select.replaceChildren(new Option('Choose a space', ''));
   for (const space of snapshot.spaces.filter(s => s.enabled && !s.session)) select.add(new Option(`${space.id} · Zone ${space.zone} · ${money(space.hourlyRateCents)}/hour`, space.id));
+  // A saved arrival may already occupy its space after a lost response.
+  // Keep a valid selection so native form validation still allows its UUID retry.
+  if (pendingArrival && ![...select.options].some(option => option.value === pendingArrival.spaceId)) {
+    select.add(new Option(`${pendingArrival.spaceId} · Pending arrival — retry to confirm`, pendingArrival.spaceId));
+  }
   select.value = selected;
   $('spaces').replaceChildren();
   for (const zone of ['A', 'B', 'C']) {
@@ -40,7 +45,7 @@ function renderSpaces() {
       button.disabled = occupied || !space.enabled;
       button.setAttribute('aria-label', `${space.id}, ${occupied ? 'occupied' : 'available'}, ${space.type}`);
       button.append(element('strong', '', space.id), element('span', 'car', occupied ? '▰' : 'P'), element('small', '', occupied ? 'IN USE' : space.type === 'accessible' ? 'ACCESSIBLE' : 'AVAILABLE'));
-      button.addEventListener('click', () => { select.value = space.id; renderSpaces(); $('vehicle-tag').focus(); });
+      button.addEventListener('click', () => { select.value = space.id; changeSpace(); $('vehicle-tag').focus(); });
       row.append(button);
     }
     $('spaces').append(row);
@@ -129,8 +134,12 @@ async function refresh() {
   } catch (error) { $('mode').textContent = 'Connection error'; notice(`${error.message} Displayed values may be stale.`, true); }
   finally { polling = false; }
 }
-$('space-select').addEventListener('change', () => { pendingArrival = undefined; if (snapshot) renderSpaces(); });
-$('vehicle-tag').addEventListener('input', () => { pendingArrival = undefined; });
+function changeSpace() {
+  pendingArrival = undefined;
+  if (snapshot) renderSpaces();
+}
+$('space-select').addEventListener('change', changeSpace);
+$('vehicle-tag').addEventListener('input', () => { pendingArrival = undefined; if (snapshot) renderSpaces(); });
 $('arrival-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (mutating) return;

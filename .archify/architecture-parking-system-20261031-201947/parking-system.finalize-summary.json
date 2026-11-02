@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/candidate.json",
+    "sha256": "04eb4919d2d3b18163eb053f8583bf1f7e291541ea01cf4d3cba28c4e74fc9fb",
+    "bytes": 5228
+  },
+  "artifact": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/parking-system.html",
+    "sha256": "a97914c9acd96eced52d0f3da2f08f52f05329af268ff323688983160236f3e2",
+    "bytes": 837467
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/parking-system.finalize.json",
+    "summaryReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/parking-system.finalize-summary.json",
+    "browserCheckReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/parking-system.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-31T13:13:06.611Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2984,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

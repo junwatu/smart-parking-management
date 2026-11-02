@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "1a00fcb7-d1be-48a3-b86f-2585a30ffe4f",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/candidate.json",
+  "output": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-parking-system-20261031-201947/parking-system.html",
+  "specification": {
+    "sha256": "04eb4919d2d3b18163eb053f8583bf1f7e291541ea01cf4d3cba28c4e74fc9fb",
+    "bytes": 5228
+  },
+  "artifact": {
+    "sha256": "a97914c9acd96eced52d0f3da2f08f52f05329af268ff323688983160236f3e2",
+    "bytes": 837467
+  }
+}

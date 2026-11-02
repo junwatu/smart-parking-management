@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/candidate.json",
+    "sha256": "b2b35d726e35f119c8fd47a644b6af8f5907c13f02d11e3395e3cef508b53138",
+    "bytes": 5874
+  },
+  "artifact": {
+    "path": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.html",
+    "sha256": "e127416fd1525bec6b43c4ff4e840c0201d1f5e00faa1c6c75f7e7f1c422f258",
+    "bytes": 836862
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "fail"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/browser-check-runtime",
+      "severity": "error",
+      "message": "browser-check could not complete its Chrome inspection.",
+      "subject": {
+        "artifact": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.html"
+      },
+      "evidence": {
+        "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: still running.\nChrome transport: Node v24.22.1, libuv 1.52.1, darwin; pid=83786, exitCode=null, signalCode=null.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      },
+      "supportedFixes": [
+        "resolve the reported Chrome inspection error, then rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.finalize.json",
+    "summaryReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.finalize-summary.json",
+    "browserCheckReceipt": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 5130,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

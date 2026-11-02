@@ -1,4 +1,4 @@
-# Building a Smart Parking Management System with GridDB Native and Node.js
+# Building Smart Parking Management System with GridDB Native and Node.js
 ![Building a Smart Parking Management System with GridDB Native and Node.js — illustrated parking lot and database](assets/blog-cover.png)
 
 ## Table of Contents
@@ -25,7 +25,11 @@
 
 A parking dashboard needs to answer a few practical questions: Which spaces are available? How long has each vehicle been parked? What fee should be recorded when it leaves? When does the garage reach its busiest period?
 
+In a small lot where every space is visible, a driver can simply park in an empty space. In a garage with several floors or multiple parking areas, finding that space becomes harder. Shared availability information can help drivers decide where to look and give operators a view of how the facility is being used. Sensors supply observations; the useful part is turning parking activity into information people can act on.
+
 In this tutorial, we build a small parking management application with Node.js and GridDB Native. It manages 24 spaces across three zones, records arrivals and departures, calculates fees, and displays occupancy history. A simulator generates parking events, so you can follow along without installing physical parking sensors.
+
+The 24-space layout keeps the example easy to follow. The dashboard is an operator view of the data foundation for smart parking: it shows availability and records how spaces are used. Drivers still choose their own spaces; driver guidance, automatic space recommendations and demand forecasting are possible extensions.
 
 The project includes a browser dashboard, a Node.js API and a persistent Python worker. GridDB Collections store space metadata and sessions, while TimeSeries containers store occupancy samples. The dashboard uses plain JavaScript and CSS, keeping the application easy to inspect and adapt.
 
@@ -41,8 +45,6 @@ The prototype has six main features:
 6. Generate parking activity with a simulator and display its history.
 
 The first version uses simulated input so readers can run it without buying parking sensors. Native mode writes these simulated events into real GridDB containers; the optional demo preview uses memory only.
-
-<!-- Publication asset: assets/dashboard.png — capture the parking dashboard after verifying native mode. -->
 
 ## Why Use the Native GridDB Client?
 
@@ -111,24 +113,6 @@ cd smart-parking-management/apps
 npm install
 ```
 
-```text
-apps/
-├── package.json
-├── scripts/                 # Workspace commands, environment loading, checks
-├── dashboard/               # HTML, CSS and browser JavaScript
-└── native-bridge/
-    ├── .env.example
-    ├── lib/                 # Native runtime JARs
-    ├── src/                 # Node API and persistent-worker client
-    ├── python/              # Schema initializer and parking operations
-    └── scripts/             # macOS native runtime setup
-blogs/
-└── smart-parking-management/
-    └── blog.md
-```
-
-The application keeps the workspace layout of the GridDB native example. The dashboard is served directly by the Node API, so this version does not need a separate frontend development server.
-
 ### 2. Install the public native dependencies
 
 On macOS:
@@ -145,6 +129,12 @@ Extract the compatible `gridstore-advanced.jar` from the Cloud Java library bund
 
 ```text
 apps/native-bridge/lib/gridstore-advanced.jar
+```
+Or, you can run this script after you extracted the Cloud Java library bundle:
+
+```
+cd apps
+npm run install:cloud-jar -- "/path/to/griddb-ee-java-lib-5.9.0-linux.x86_64.rpm"
 ```
 
 The runtime directory should contain these four files:
@@ -201,8 +191,35 @@ npm run init
 
 The initializer creates three Collections, one lot-wide TimeSeries and 24 per-space TimeSeries containers. Running it again preserves compatible schemas. An incompatible existing schema stops initialization without deleting its data.
 
-This command uses the same native worker as the application. No GridDB Web API request is used for initialization.
-
+```text
+[
+  {
+    "name": "parking_demo_spaces",
+    "status": "created"
+  },
+  {
+    "name": "parking_demo_sessions",
+    "status": "created"
+  },
+  {
+    "name": "parking_demo_events",
+    "status": "created"
+  },
+  {
+    "name": "parking_demo_occupancy",
+    "status": "created"
+  },
+  {
+    "name": "parking_demo_sensor_A01",
+    "status": "created"
+  },
+  {
+    "name": "parking_demo_sensor_A02",
+    "status": "created"
+  },
+  ...
+]
+```
 ### 6. Seed parking spaces and start the application
 
 ```bash
@@ -221,17 +238,10 @@ http://127.0.0.1:3002
 
 Click an available space, enter a vehicle tag, and register an arrival. Register a departure from the active-session table. Start the simulator when you want to generate additional activity; it is stopped by default.
 
-### Optional: Preview without a database
-
-```bash
-npm run dev:demo
-```
-
-Stop the live server before starting another mode on the same port. Demo mode begins with eight occupied spaces and displays `DEMO · memory only` in the header. Its data resets when the server exits, and it does not validate GridDB connectivity. Native mode never silently falls back to demo mode.
+![app dashboard](assets/park-app-dashboard.png)
 
 ## System Architecture
-
-The system has five responsibilities.
+![sys arch](assets/smart-parking-five-system-responsibilities.png)
 
 ### Parking data source
 
@@ -253,16 +263,6 @@ One persistent Python process starts the JVM, loads the JARs and creates the Gri
 
 GridDB stores space metadata, sessions, events and occupancy samples. Collections use stable string keys for business records. TimeSeries containers use timestamp keys for recent-window queries.
 
-```text
-Browser dashboard
-  → local Node.js API
-  → persistent Python worker over NDJSON
-  → JPype / JVM / GridDB Java client
-  → GridDB Cloud native connection
-```
-
-<!-- Publication asset: assets/system-architecture.webp — browser, Node API, Python worker, session logic and GridDB native connection. -->
-
 ## GridDB Schema
 
 Parking combines durable business records with time-series occupancy measurements. All container names begin with `PARKING_CONTAINER_PREFIX`; the default prefix is `parking_demo`.
@@ -277,7 +277,7 @@ Parking combines durable business records with time-series occupancy measurement
 
 There are 28 containers in this prototype. The prefix separates the application from unrelated data in the same database.
 
-<!-- Publication asset: assets/griddb-schema.webp — Collections for business records and TimeSeries for occupancy projections. -->
+![GridDB schema: Collections for business records and TimeSeries for occupancy projections](assets/griddb-schema.webp)
 
 ### `spaces` Collection
 
@@ -337,8 +337,7 @@ Using a Collection avoids timestamp collisions between different vehicles' event
 | `source` | STRING | `session_projection` for this simulator |
 
 These rows are projections of session state, not measurements from physical sensors. Sessions remain the authority for live availability and fees. Separate containers keep different spaces' samples from sharing a timestamp key. See the [GridDB data model](https://docs.griddb.net/architecture/data-model.html) for the distinction between Collections and TimeSeries.
-
-<!-- Publication asset: assets/containers.png — show this project's initialized containers with sensitive Cloud details redacted. -->
+![griddb cloud containers](assets/containers.png)
 
 ## Technical Implementation
 

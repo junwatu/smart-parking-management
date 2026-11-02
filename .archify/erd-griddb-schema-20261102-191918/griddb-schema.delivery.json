@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "cd7f0f5c-7323-4ab7-aa75-718676502b31",
+  "status": "current",
+  "command": "deliver",
+  "type": "erd",
+  "input": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/candidate.json",
+  "output": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/erd-griddb-schema-20261102-191918/griddb-schema.html",
+  "specification": {
+    "sha256": "243ed63df9817e8f3c2944b8b2906ae7aef55c4c1081280ec227a0b60b23a6a0",
+    "bytes": 7003
+  },
+  "artifact": {
+    "sha256": "81050a46cd481c24a17c5316d0602d11471d875ebbb08099b95e165c565e836c",
+    "bytes": 852659
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "91abe68b-a1e6-472c-8be6-60bca9da7351",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/candidate.json",
+  "output": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/sequence-parking-request-20261031-201215/parking-request.html",
+  "specification": {
+    "sha256": "b2b35d726e35f119c8fd47a644b6af8f5907c13f02d11e3395e3cef508b53138",
+    "bytes": 5874
+  },
+  "artifact": {
+    "sha256": "e127416fd1525bec6b43c4ff4e840c0201d1f5e00faa1c6c75f7e7f1c422f258",
+    "bytes": 836862
+  }
+}

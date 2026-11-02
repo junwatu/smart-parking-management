@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "GridDB schema: business records and occupancy projections",
+    "locale": "en",
+    "output": ".archify/erd-griddb-schema-20261102-191918/griddb-schema.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:junwatu/smart-parking-management.git",
+      "revision": "24191840fc5c60810497b715926915f3041a4a72",
+      "link_mode": "local-only"
+    }
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 95,
+    "gapY": 100
+  },
+  "entities": [
+    {
+      "id": "spaces",
+      "label": "spaces",
+      "sublabel": "Business records",
+      "tag": "Collections",
+      "row": 0,
+      "col": 0,
+      "width": 310,
+      "attributes": [
+        {
+          "name": "space_id",
+          "type": "STRING",
+          "key": "pk"
+        },
+        {
+          "name": "zone",
+          "type": "STRING"
+        },
+        {
+          "name": "space_type",
+          "type": "STRING"
+        },
+        {
+          "name": "hourly_rate_cents",
+          "type": "INTEGER"
+        },
+        {
+          "name": "enabled",
+          "type": "BOOL"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 5,
+          "end_line": 5
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 17,
+          "end_line": 22
+        }
+      ]
+    },
+    {
+      "id": "sessions",
+      "label": "sessions",
+      "sublabel": "Business records",
+      "tag": "Collections",
+      "row": 0,
+      "col": 1,
+      "width": 310,
+      "attributes": [
+        {
+          "name": "session_id",
+          "type": "STRING",
+          "key": "pk"
+        },
+        {
+          "name": "space_id",
+          "type": "STRING"
+        },
+        {
+          "name": "vehicle_tag",
+          "type": "STRING"
+        },
+        {
+          "name": "entered_at",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "exited_at",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "active",
+          "type": "BOOL"
+        },
+        {
+          "name": "hourly_rate_cents",
+          "type": "INTEGER"
+        },
+        {
+          "name": "fee_cents",
+          "type": "INTEGER"
+        },
+        {
+          "name": "simulated",
+          "type": "BOOL"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 6,
+          "end_line": 6
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 17,
+          "end_line": 22
+        }
+      ]
+    },
+    {
+      "id": "events",
+      "label": "events",
+      "sublabel": "Business records",
+      "tag": "Collections",
+      "row": 0,
+      "col": 2,
+      "width": 310,
+      "attributes": [
+        {
+          "name": "event_id",
+          "type": "STRING",
+          "key": "pk"
+        },
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "event_type",
+          "type": "STRING"
+        },
+        {
+          "name": "space_id",
+          "type": "STRING"
+        },
+        {
+          "name": "session_id",
+          "type": "STRING"
+        },
+        {
+          "name": "vehicle_tag",
+          "type": "STRING"
+        },
+        {
+          "name": "fee_cents",
+          "type": "INTEGER"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 7,
+          "end_line": 7
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 17,
+          "end_line": 22
+        }
+      ]
+    },
+    {
+      "id": "sensors",
+      "label": "sensor_A01 ... sensor_C08",
+      "sublabel": "24 containers; one shared schema",
+      "tag": "TimeSeries",
+      "row": 1,
+      "col": 0,
+      "width": 310,
+      "attributes": [
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP",
+          "key": "pk"
+        },
+        {
+          "name": "occupied",
+          "type": "BOOL"
+        },
+        {
+          "name": "session_id",
+          "type": "STRING"
+        },
+        {
+          "name": "source",
+          "type": "STRING"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 9,
+          "end_line": 9
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 17,
+          "end_line": 22
+        }
+      ]
+    },
+    {
+      "id": "occupancy",
+      "label": "occupancy",
+      "sublabel": "Lot-wide occupancy",
+      "tag": "TimeSeries",
+      "row": 1,
+      "col": 1,
+      "width": 310,
+      "attributes": [
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP",
+          "key": "pk"
+        },
+        {
+          "name": "occupied",
+          "type": "INTEGER"
+        },
+        {
+          "name": "capacity",
+          "type": "INTEGER"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 8,
+          "end_line": 8
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 17,
+          "end_line": 22
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "visit-space",
+      "from": "sessions",
+      "to": "spaces",
+      "label": "space_id reference",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "audit-visit",
+      "from": "events",
+      "to": "sessions",
+      "label": "session_id reference",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Business records: 3 Collections",
+      "items": [
+        "spaces stores zone, type, hourly rate and enabled state.",
+        "sessions is authoritative for availability and calculated fees.",
+        "events records arrival/departure projections; event_id combines session ID and event type."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Occupancy projections: 25 TimeSeries",
+      "items": [
+        "occupancy stores lot-wide occupied count and capacity.",
+        "sensor_A01 through sensor_C08 share the schema shown; vacant samples use an empty session_id.",
+        "All TimeSeries use timestamp row keys. Sensor state is derived from sessions."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Reading the schema",
+      "items": [
+        "PK denotes the GridDB row key. Relationship lines are application references, not database-enforced foreign keys.",
+        "Container names are prefixed by PARKING_CONTAINER_PREFIX, omitted here for readability.",
+        "A saved session and its event/telemetry projections are separate writes; partial projection failures return warnings."
+      ]
+    }
+  ]
+}

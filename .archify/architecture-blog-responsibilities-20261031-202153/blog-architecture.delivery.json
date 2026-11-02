@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d6fb3c5e-f848-4f48-9295-54f89a5c59be",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/candidate.json",
+  "output": "/Users/equan_p/Downloads/GridDB/smart-parking-management/.archify/architecture-blog-responsibilities-20261031-202153/blog-architecture.html",
+  "specification": {
+    "sha256": "ec4938fa600c3e160ddce94fcc844a72a8e86c46fec6fc94bc0c53579d9ada6c",
+    "bytes": 5368
+  },
+  "artifact": {
+    "sha256": "4092f2530e7a5f5de3762deaae3435a68a5ac33c8a74d270a82da5f754bd2483",
+    "bytes": 837148
+  }
+}

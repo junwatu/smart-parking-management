@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Parking arrival: browser request to GridDB",
+    "output": ".archify/sequence-parking-request-20261031-201215/parking-request.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:junwatu/smart-parking-management.git",
+      "revision": "24191840fc5c60810497b715926915f3041a4a72",
+      "link_mode": "local-only"
+    }
+  },
+  "participants": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Dashboard",
+      "sublabel": "Browser JavaScript",
+      "sources": [
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 134,
+          "end_line": 146
+        },
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 14,
+          "end_line": 18
+        },
+        {
+          "path": "apps/dashboard/app.js",
+          "line": 109,
+          "end_line": 130
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Node.js API",
+      "sublabel": "HTTP + NDJSON bridge",
+      "sources": [
+        {
+          "path": "apps/native-bridge/src/server.js",
+          "line": 60,
+          "end_line": 73
+        },
+        {
+          "path": "apps/native-bridge/src/griddb-client.js",
+          "line": 94,
+          "end_line": 119
+        },
+        {
+          "path": "apps/native-bridge/src/parking-service.js",
+          "line": 30,
+          "end_line": 33
+        }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Python worker",
+      "sublabel": "JPype / JVM client",
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 13,
+          "end_line": 29
+        },
+        {
+          "path": "apps/native-bridge/python/griddb_worker.py",
+          "line": 53,
+          "end_line": 78
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 127,
+          "end_line": 149
+        }
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "GridDB Cloud",
+      "sublabel": "Native connection",
+      "sources": [
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 73,
+          "end_line": 85
+        },
+        {
+          "path": "apps/native-bridge/python/parking.py",
+          "line": 167,
+          "end_line": 190
+        },
+        {
+          "path": "apps/native-bridge/python/init_schema.py",
+          "line": 5,
+          "end_line": 9
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "arrival",
+      "from": "browser",
+      "to": "api",
+      "y": 170,
+      "label": "HTTP POST /api/arrivals",
+      "variant": "emphasis",
+      "note": "JSON: sessionId (UUID), spaceId, vehicleTag"
+    },
+    {
+      "id": "command",
+      "from": "api",
+      "to": "worker",
+      "y": 235,
+      "label": "NDJSON: park + request ID",
+      "note": "Node validates input; worker handles commands serially"
+    },
+    {
+      "id": "read",
+      "from": "worker",
+      "to": "store",
+      "y": 300,
+      "label": "Native reads: session + space + active visits",
+      "note": "Matching UUID replays; conflicting space or vehicle is rejected"
+    },
+    {
+      "id": "rows",
+      "from": "store",
+      "to": "worker",
+      "y": 370,
+      "label": "Rows for validation",
+      "variant": "return"
+    },
+    {
+      "id": "write",
+      "from": "worker",
+      "to": "store",
+      "y": 415,
+      "label": "Native put: new session",
+      "variant": "emphasis",
+      "note": "Sessions are authoritative"
+    },
+    {
+      "id": "saved",
+      "from": "store",
+      "to": "worker",
+      "y": 470,
+      "label": "Session saved",
+      "variant": "return"
+    },
+    {
+      "id": "projection",
+      "from": "worker",
+      "to": "store",
+      "y": 515,
+      "label": "Native puts: event + occupancy + sensors",
+      "note": "Separate writes; projection failures become warnings"
+    },
+    {
+      "id": "projection-result",
+      "from": "store",
+      "to": "worker",
+      "y": 580,
+      "label": "Projection results",
+      "variant": "return"
+    },
+    {
+      "id": "worker-result",
+      "from": "worker",
+      "to": "api",
+      "y": 625,
+      "label": "NDJSON: result + request ID",
+      "variant": "return"
+    },
+    {
+      "id": "http-result",
+      "from": "api",
+      "to": "browser",
+      "y": 670,
+      "label": "HTTP 201: session + warnings",
+      "variant": "return",
+      "note": "Matching arrival retry returns HTTP 200"
+    },
+    {
+      "id": "refresh",
+      "from": "browser",
+      "to": "api",
+      "y": 735,
+      "label": "HTTP GET /api/parking",
+      "note": "Then /api/events and /api/history; also polled every 5 seconds"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Protocol boundaries",
+      "items": [
+        "HTTP connects the browser to the Node.js application.",
+        "NDJSON travels over worker stdin/stdout, not a network API.",
+        "The Python worker uses JPype and the Java client for native GridDB calls."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Scope of this sequence",
+      "items": [
+        "Native mode, new arrival happy path; database reads and projection writes are grouped.",
+        "A persistent worker and store already exist before this request.",
+        "The HTTPS Notification Provider URL configures discovery; it is not the GridDB Web API."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Retries and partial failures",
+      "items": [
+        "Reuse the same UUID for the same logical arrival.",
+        "A saved session remains valid if event or telemetry projections fail.",
+        "Follow-up dashboard reads use the same worker and native connection."
+      ]
+    }
+  ]
+}
