@@ -1,4 +1,4 @@
-# Building Smart Parking Management System with GridDB Native and Node.js
+# Building a Smart Parking Management System with GridDB Native and Node.js
 ![Building a Smart Parking Management System with GridDB Native and Node.js — illustrated parking lot and database](assets/blog-cover.png)
 
 ## Table of Contents
@@ -16,7 +16,7 @@
 - [Reading Results in Node.js](#reading-results-in-nodejs)
 - [Connecting Real Parking Sensors](#connecting-real-parking-sensors)
 - [What Uses HTTP and What Does Not?](#what-uses-http-and-what-does-not)
-- [Testing and Troubleshooting](#testing-and-troubleshooting)
+- [Testing](#testing)
 - [Further Enhancements](#further-enhancements)
 - [Conclusion](#conclusion)
 - [References](#references)
@@ -103,7 +103,7 @@ The setup script supplies the public libraries; it does not download the license
 
 ### 1. Clone the repository and enter the application workspace
 
-The application source are in [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). To clone the project use this command:
+The application source is available at [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). To clone the project, use this command:
 ```bash
 git clone https://github.com/junwatu/smart-parking-management.git
 cd smart-parking-management/apps
@@ -127,10 +127,9 @@ Extract the compatible `gridstore-advanced.jar` from the Cloud Java library bund
 ```text
 native-bridge/lib/gridstore-advanced.jar
 ```
-Or, you can run this script after you extracted the Cloud Java library bundle:
+Or, extract the downloaded ZIP bundle, then pass the Cloud Java library RPM inside it to the installer. The script extracts the JAR from the RPM and copies it into the runtime directory:
 
 ```
-cd apps
 npm run install:cloud-jar -- "/path/to/griddb-ee-java-lib-5.9.0-linux.x86_64.rpm"
 ```
 
@@ -463,6 +462,29 @@ Store creation is lazy. The `health` operation accesses the spaces container to 
 
 *The shared native-client bridge pattern: Node.js sends NDJSON to a persistent Python worker, which calls GridDB through JPype and the Java client. This is an explanatory diagram, not evidence of a live parking Cloud run.*
 
+### Creating a Collection
+
+`apps/native-bridge/python/init_schema.py` defines the schemas for all containers. Expanded from its `SPACES` definition, creating the spaces Collection looks like this:
+
+```python
+info = griddb.ContainerInfo(
+    "parking_demo_spaces",
+    [
+        ["space_id", griddb.Type.STRING],
+        ["zone", griddb.Type.STRING],
+        ["space_type", griddb.Type.STRING],
+        ["hourly_rate_cents", griddb.Type.INTEGER],
+        ["enabled", griddb.Type.BOOL],
+    ],
+    type=griddb.ContainerType.COLLECTION,
+    row_key=True,
+)
+container = store.put_container(info, modifiable=False)
+container.close()
+```
+
+These examples assume the worker has imported `griddb_python as griddb` and created `store`. With `row_key=True`, the first column, `space_id`, identifies each row. The initializer uses the same Collection type for `sessions` and `events`, with their respective schemas. The examples show the default prefix; the initializer builds each name from `PARKING_CONTAINER_PREFIX`.
+
 ### Creating a TimeSeries container
 
 The schema initializer describes the lot-wide sample explicitly:
@@ -496,7 +518,33 @@ const result = await client.request('park', {
 });
 ```
 
-The worker checks whether that session already exists, whether the space is available, and whether the vehicle already has an active session. It then writes the session, records an arrival event, and samples occupancy.
+The worker checks whether that session already exists, whether the space is available, and whether the vehicle already has an active session. After those checks, `Parking.park()` in `apps/native-bridge/python/parking.py` builds a row in the same column order as the `sessions` schema:
+
+```python
+now = utc_now()
+row = [
+    sid, space_id, tag,
+    now, now, True,
+    metadata[3], 0,
+    bool(req.get("simulated", False)),
+]
+self.put("sessions", row)
+```
+
+Here `sid`, `space_id` and `tag` are validated request values. `metadata[3]` is the space's hourly rate in cents. The two timestamps initially match, `active` is true, and the final fee starts at zero.
+
+The `put()` method performs the native database write:
+
+```python
+def put(self, suffix, row):
+    con = self.container(suffix)
+    try:
+        con.put(row)
+    finally:
+        con.close()
+```
+
+`self.container("sessions")` opens the prefixed container, such as `parking_demo_sessions`. `con.put(row)` inserts the row or replaces the row with the same key. The arrival checks prevent a matching retry from creating another visit or a conflicting request from overwriting an existing visit. After saving the session, the worker records an arrival event and samples occupancy.
 
 The session is the authoritative record. If an event or telemetry projection fails after the session is saved, the API returns the session with a warning. The separate writes are not one atomic transaction across containers. A production application should reconcile missing projections from the session records.
 
@@ -536,6 +584,27 @@ WHERE timestamp > TIMESTAMPADD(HOUR, NOW(), -24)
 ORDER BY timestamp DESC
 LIMIT 1000
 ```
+
+`Parking.history()` passes this query to `self.read("occupancy", tql)`. The shared `read()` helper opens the prefixed container, executes TQL and collects the returned rows:
+
+```python
+def read(self, suffix, tql):
+    con = self.container(suffix)
+    try:
+        rs = con.query(tql).fetch()
+        try:
+            rows = []
+            while rs.has_next():
+                rows.append(rs.next())
+            return rows
+        finally:
+            rs.close()
+    finally:
+        con.close()
+```
+
+`con.query(tql)` creates the query and `fetch()` executes it. Each `rs.next()` returns a row in schema column order: timestamp, occupied count and capacity. The `finally` blocks close the result set and container even if reading fails. TQL targets the container opened by `self.container(suffix)`, so the statement does not need a SQL-style `FROM` clause.
+
 The application reverses the newest rows before drawing the chart. Keeping the query bounded prevents the worker from loading an unlimited history into memory. The response indicates when the limit may have truncated the requested period.
 
 History starts when the application records activity. The seed command does not create fictional past observations. Run the simulator or register vehicles to build a useful chart.
@@ -652,7 +721,7 @@ For native verification, repeat schema initialization, confirm the containers re
 9. Design database-supported coordination before running multiple API processes against the same spaces.
 10. Document and automate deployment for each target platform.
 
-The project demo in this blog don't include occupancy forecasting. A future forecast needs enough observed history and an evaluation method before its predictions should influence reservations or capacity planning.
+This demo does not include occupancy forecasting. A future forecast needs enough observed history and an evaluation method before its predictions should influence reservations or capacity planning.
 
 ## Conclusion
 
