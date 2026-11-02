@@ -48,7 +48,7 @@ The first version uses simulated input so readers can run it without buying park
 
 ## Why Use the Native GridDB Client?
 
-GridDB provides both native client interfaces and a Web API. This application follows the native connection pattern used by the source example, so Node.js can keep its application logic while delegating database operations to the supported Python client.
+GridDB provides both native client interfaces and a Web API. This application uses Node.js to keep its application logic while delegating database operations to the supported Python client.
 
 The native data path is:
 
@@ -76,11 +76,9 @@ Use Python 3.12 and a project virtual environment. The native runtime needs the 
 
 The GridDB Python client invokes the Java API through JPype. The included macOS setup script uses Homebrew to install OpenJDK 21 and Maven, then builds the Arrow adapter.
 
-The setup pins the Python client source to the commit inspected in the original example, using GridDB Java/Arrow adapter 5.9.0 and Arrow memory Netty 17.0.0. Confirm these libraries are compatible with your Cloud service before substituting versions.
-
 ### GridDB Cloud
 
-Use a GridDB Cloud service with a supported public native route, such as the Cloud v3.2 configuration described in the source example. From the portal:
+Use a GridDB Cloud service with a supported public native route, such as the GridDB Cloud v3.2. From the portal:
 
 1. Generate the Notification Provider URL.
 2. Add your application's public outbound IP to the GridDB access list.
@@ -90,23 +88,22 @@ Use a GridDB Cloud service with a supported public native route, such as the Clo
 The setup script supplies the public libraries; it does not download the licensed Cloud JAR. Keep the JAR and real credentials outside a public repository.
 ![GridDB Cloud Notification Provider URL location](assets/notification-provider-url.png)
 
-*The cluster overview shows the Notification Provider URL for external connections. This setup screenshot is reused from the energy-monitor example; use your own cluster's connection settings.*
+*The cluster overview shows the Notification Provider URL for external connections.*
 
 ![GridDB Cloud native network access settings](assets/network-access.png)
 
-*Allow your application's public outbound IP under GridDB Access. This reused screenshot shows entries still processing; wait for your own access rule to become effective before connecting.*
+*Allow your application's public outbound IP under GridDB Access.*
 
 ![GridDB Cloud library and plugin download location](assets/griddb-cloud-lib-plugin.png)
 
-*GridDB Cloud's library download location. This generic setup screenshot is reused from the energy-monitor example; portal layout and available downloads may differ for your service.*
+*GridDB Cloud's library download location.*
 
 
 ## How to Run
 
 ### 1. Clone the repository and enter the application workspace
 
-The application source and blog draft are in [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). The repository is currently private, so your GitHub account must have access and Git must be authenticated before cloning.
-
+The application source are in [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). To clone the project use this command:
 ```bash
 git clone https://github.com/junwatu/smart-parking-management.git
 cd smart-parking-management/apps
@@ -128,7 +125,7 @@ The setup script installs Java and Maven, creates the Python virtual environment
 Extract the compatible `gridstore-advanced.jar` from the Cloud Java library bundle you downloaded, then copy it into:
 
 ```text
-apps/native-bridge/lib/gridstore-advanced.jar
+native-bridge/lib/gridstore-advanced.jar
 ```
 Or, you can run this script after you extracted the Cloud Java library bundle:
 
@@ -239,7 +236,7 @@ http://127.0.0.1:3002
 Click an available space, enter a vehicle tag, and register an arrival. Register a departure from the active-session table. Start the simulator when you want to generate additional activity; it is stopped by default.
 
 ## System Architecture
-![sys arch](assets/smart-parking-five-system-responsibilities.png)
+![Smart parking architecture showing the five system responsibilities](assets/smart-parking-five-system-responsibilities.png)
 
 ### Parking data source
 
@@ -335,9 +332,59 @@ Using a Collection avoids timestamp collisions between different vehicles' event
 | `source` | STRING | `session_projection` for this simulator |
 
 These rows are projections of session state, not measurements from physical sensors. Sessions remain the authority for live availability and fees. Separate containers keep different spaces' samples from sharing a timestamp key. See the [GridDB data model](https://docs.griddb.net/architecture/data-model.html) for the distinction between Collections and TimeSeries.
-![griddb cloud containers](assets/containers.png)
+![GridDB Cloud container list showing parking Collections and TimeSeries containers](assets/containers.png)
 
 ## Technical Implementation
+
+### Node.js API Routes
+
+The browser communicates with the HTTP server in `apps/native-bridge/src/server.js`. This server uses Node's built-in `node:http` module to match each request's method and URL path to a parking operation. The same server serves `index.html`, `app.js` and `styles.css` for the dashboard.
+
+| Method | Route | Function |
+| --- | --- | --- |
+| GET | `/api/health` | Check native database access; demo mode reports that no database is connected |
+| GET | `/api/parking` | Return spaces, active sessions, summary statistics and simulator status |
+| GET | `/api/events` | Return the newest 100 arrival/departure events |
+| GET | `/api/history?hours=24` | Return up to 1,000 recent occupancy samples; `hours` accepts integers from 1 to 168 and defaults to 24 |
+| POST | `/api/arrivals` | Register an arrival using `{sessionId, spaceId, vehicleTag}` |
+| POST | `/api/departures` | Close a visit using `{sessionId}` and record its final fee |
+| POST | `/api/simulator/start` | Start the simulator timer; send an empty JSON object `{}` |
+| POST | `/api/simulator/stop` | Stop the simulator timer; send an empty JSON object `{}` |
+
+POST requests require `Content-Type: application/json`. A new arrival returns HTTP 201; a matching arrival retry returns 200. Successful reads, departures and simulator controls return 200. Invalid parking input returns 400, an unknown session returns 404, an occupancy or session-ID conflict returns 409, and native database failures return 503.
+
+To see how an HTTP route reaches GridDB, follow a history request:
+
+```bash
+curl 'http://127.0.0.1:3002/api/history?hours=24'
+```
+
+Inside the server's request handler, this branch extracts the time window and calls the parking service:
+
+```javascript
+else if (req.method === 'GET' && url.pathname === '/api/history') {
+  result = await service.history(
+    Number(url.searchParams.get('hours') ?? 24)
+  );
+}
+```
+
+`ParkingService.history()` in `src/parking-service.js` validates that window, then calls `this.store.request('history', { hours })`. In native mode, `this.store` is a `GridDBClient`. It sends a command to the persistent Python worker over stdin, with a request ID added by the bridge:
+
+```json
+{"id":12,"operation":"history","hours":24}
+```
+
+The worker imports `Parking` from `parking.py` and creates `parking = Parking(store)`. Its dispatcher passes the command to the matching method:
+
+```python
+elif operation in ("park", "depart", "history"):
+    result = getattr(parking, operation)(req)
+```
+
+For this request, that call is `parking.history(req)`. The method executes the occupancy TQL query shown later in this article. The worker converts the result to JSON and writes a response to stdout with the same request ID. Node matches that response to its pending promise and sends the result to the browser. The history response contains `points`, `limit` and `possiblyTruncated`.
+
+The simulator start and stop routes control a timer in Node.js. While running, the timer sends `simulate` commands through the same worker. In demo mode, parking operations go to the in-memory store instead of Python or GridDB.
 
 ### Starting a persistent Python worker
 
@@ -414,7 +461,7 @@ Store creation is lazy. The `health` operation accesses the spaces container to 
 
 ![Native connection sequence from Node.js through Python and the Java client to GridDB Cloud](assets/native-connection-sequence.webp)
 
-*The shared native-client bridge pattern, reused from the energy-monitor example: Node.js sends NDJSON to a persistent Python worker, which calls GridDB through JPype and the Java client. This is an explanatory diagram, not evidence of a live parking Cloud run.*
+*The shared native-client bridge pattern: Node.js sends NDJSON to a persistent Python worker, which calls GridDB through JPype and the Java client. This is an explanatory diagram, not evidence of a live parking Cloud run.*
 
 ### Creating a TimeSeries container
 
@@ -489,7 +536,6 @@ WHERE timestamp > TIMESTAMPADD(HOUR, NOW(), -24)
 ORDER BY timestamp DESC
 LIMIT 1000
 ```
-
 The application reverses the newest rows before drawing the chart. Keeping the query bounded prevents the worker from loading an unlimited history into memory. The response indicates when the limit may have truncated the requested period.
 
 History starts when the application records activity. The seed command does not create fictional past observations. Run the simulator or register vehicles to build a useful chart.
@@ -545,7 +591,7 @@ The dashboard shows:
 - Occupancy history and simulator status.
 
 Rates are captured in each session so an existing visit retains its original rate. Completed fee totals are bounded to 5,000 visits per UTC day and expose a truncation flag if that limit is exceeded.
-![app dashboard](assets/park-app-dashboard.png)
+![Smart parking dashboard showing space availability, active sessions, recorded fees and occupancy history](assets/park-app-dashboard.png)
 
 
 ## Connecting Real Parking Sensors
@@ -559,7 +605,7 @@ Parking detector → MQTT → Node ingestion adapter
                  → typed Python worker operation → GridDB TimeSeries
 ```
 
-The draft does not include an MQTT subscriber or an external sensor-ingestion endpoint. Adding one requires validated space IDs, timestamps converted to UTC datetimes, duplicate-message handling, and a policy for delayed readings.
+This project doesn't include an MQTT subscriber or an external sensor-ingestion endpoint. Adding one requires validated space IDs, timestamps converted to UTC datetimes, duplicate-message handling, and a policy for delayed readings.
 
 Keep observed sensor state separate from session state. If a detector says a space is occupied but there is no active session, flag the disagreement for reconciliation rather than silently creating a billable visit. Similarly, a single noisy vacant reading should not automatically close a paid session.
 
@@ -578,9 +624,7 @@ The local HTTP endpoints are application APIs. They do not forward operations to
 
 The default server binds to `127.0.0.1`. A public deployment needs HTTPS and operator authentication before exposing arrival, departure or simulator controls.
 
-## Testing and Troubleshooting
-
-### Verify the application
+## Testing
 
 Run the offline checks from `apps/`:
 
@@ -595,14 +639,6 @@ The tests exercise fee boundaries, repeated requests, occupancy conflicts, dupli
 
 For native verification, repeat schema initialization, confirm the containers remain unchanged, start the API, register a vehicle, close its session and check the history after several simulator events. The offline tests and successful JVM schema construction do not establish Cloud connectivity by themselves.
 
-### Diagnose native connection problems
-
-If doctor passes but the native request times out, check the provider URL, public access list, uppercase `PUBLIC` route, credentials and Cloud library compatibility. Worker readiness alone is lazy; the parking health operation deliberately accesses a container.
-
-A timeout kills the native worker and rejects pending requests. Restart the API and inspect session state before retrying an uncertain write with the same UUID. Retrying with a fresh ID could create another logical arrival.
-
-Run one API process for this draft. Its serial worker prevents concurrent mutations inside that process, but separate API instances can still race between checking a space and writing a session. A production version needs a coordination design before horizontal scaling.
-
 ## Further Enhancements
 
 1. Add validated MQTT or gate-controller ingestion for physical hardware.
@@ -616,7 +652,7 @@ Run one API process for this draft. Its serial worker prevents concurrent mutati
 9. Design database-supported coordination before running multiple API processes against the same spaces.
 10. Document and automate deployment for each target platform.
 
-The core draft does not include occupancy forecasting. A future forecast needs enough observed history and an evaluation method before its predictions should influence reservations or capacity planning.
+The project demo in this blog don't include occupancy forecasting. A future forecast needs enough observed history and an evaluation method before its predictions should influence reservations or capacity planning.
 
 ## Conclusion
 

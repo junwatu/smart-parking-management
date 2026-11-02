@@ -187,7 +187,7 @@ python3 -m unittest -v test_parking.py
 
 The tests cover fee boundaries, idempotency, occupied-space conflicts, duplicate active vehicles, validation, API endpoints, simulator control, UTC timestamp rewriting, projection failures and non-destructive seeding. These offline tests do not prove a live GridDB Cloud connection.
 
-## Draft limitations and next steps
+## Scope and limitations
 
 Run one API process/worker for this prototype. The check-before-write logic does not prevent conflicts between multiple independent API processes; production needs a database-supported coordination or locking design. The dashboard polls every five seconds, and all worker requests execute serially. Data queries are bounded: at most 64 spaces, 1,000 active sessions, 100 events and 1,000 history samples. Daily fee totals cover up to 5,000 completed sessions and expose truncation when that limit is exceeded.
 
