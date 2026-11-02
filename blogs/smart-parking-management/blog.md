@@ -238,8 +238,6 @@ http://127.0.0.1:3002
 
 Click an available space, enter a vehicle tag, and register an arrival. Register a departure from the active-session table. Start the simulator when you want to generate additional activity; it is stopped by default.
 
-![app dashboard](assets/park-app-dashboard.png)
-
 ## System Architecture
 ![sys arch](assets/smart-parking-five-system-responsibilities.png)
 
@@ -547,8 +545,8 @@ The dashboard shows:
 - Occupancy history and simulator status.
 
 Rates are captured in each session so an existing visit retains its original rate. Completed fee totals are bounded to 5,000 visits per UTC day and expose a truncation flag if that limit is exceeded.
+![app dashboard](assets/park-app-dashboard.png)
 
-<!-- Publication asset: assets/dashboard-sessions.png — active sessions, an arrival and a completed departure with the recorded fee. -->
 
 ## Connecting Real Parking Sensors
 
@@ -626,7 +624,6 @@ This application connects Node.js to GridDB Native through a persistent Python w
 
 ## References
 
-- [Smart Parking application source (private repository; access required)](https://github.com/junwatu/smart-parking-management)
 - [GridDB Python client source](https://github.com/griddb/python_client)
 - [GridDB Python getting started](https://docs.griddb.net/gettingstarted/python.html)
 - [GridDB Cloud public native connection](https://www.griddb.net/en/blog/connecting-to-griddb-cloud-v3-2-from-your-local-dev-environment-no-vpn-no-vnet-peering/)
