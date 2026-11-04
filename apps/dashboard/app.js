@@ -52,7 +52,7 @@ function renderSpaces() {
   }
 }
 function renderSessions() {
-  $('session-count').textContent = `${snapshot.sessions.length} vehicles`;
+  $('session-count').textContent = `${snapshot.sessions.length} ${snapshot.sessions.length === 1 ? 'vehicle' : 'vehicles'}`;
   $('sessions').replaceChildren();
   for (const session of snapshot.sessions) {
     const ms = Math.max(0, Date.now() - new Date(session.enteredAt));
@@ -126,7 +126,7 @@ async function refresh() {
     $('capacity').textContent = `of ${snapshot.stats.capacity} total spaces`;
     $('occupancy').textContent = `${snapshot.stats.occupancyPercent}%`;
     $('revenue').textContent = money(snapshot.stats.revenueTodayCents);
-    $('completed').textContent = `${snapshot.stats.completedToday} departures · UTC${snapshot.stats.revenueTruncated ? ' · partial total' : ''}`;
+    $('completed').textContent = `${snapshot.stats.completedToday} ${snapshot.stats.completedToday === 1 ? 'departure' : 'departures'} · UTC${snapshot.stats.revenueTruncated ? ' · partial total' : ''}`;
     $('simulator').textContent = snapshot.simulator.running ? 'Stop simulator' : 'Start simulator';
     renderSpaces(); renderSessions(); renderEvents(events); renderHistory(history);
     if (snapshot.simulator.lastError) notice(`Simulator stopped: ${snapshot.simulator.lastError}`, true);

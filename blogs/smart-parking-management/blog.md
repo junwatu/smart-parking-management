@@ -14,9 +14,8 @@
 - [Parking Sessions and Fees](#parking-sessions-and-fees)
 - [Simulating Parking Activity](#simulating-parking-activity)
 - [Reading Results in Node.js](#reading-results-in-nodejs)
-- [Connecting Real Parking Sensors](#connecting-real-parking-sensors)
-- [What Uses HTTP and What Does Not?](#what-uses-http-and-what-does-not)
 - [Testing](#testing)
+- [Connecting Real Parking Sensors](#connecting-real-parking-sensors)
 - [Further Enhancements](#further-enhancements)
 - [Conclusion](#conclusion)
 - [References](#references)
@@ -38,11 +37,18 @@ The prototype has six main features:
 5. Store lot-wide and per-space occupancy samples in GridDB TimeSeries containers.
 6. Generate parking activity with a simulator and display its history.
 
-The first version uses simulated input so readers can run it without buying parking sensors. Native mode writes these simulated events into real GridDB containers; the optional demo preview uses memory only.
+The app prototype supports two modes:
+
+- Demo mode stores manually entered and simulated parking events in memory, so readers can preview the app without a database connection.
+- Native (live) mode saves these events to real GridDB containers. Neither mode requires physical parking sensors.
 
 ## Why Use the Native GridDB Client?
 
 This tutorial uses the native GridDB client to create containers, write rows and execute TQL queries against GridDB Cloud. Node.js serves the dashboard and HTTP API, while the Python client performs database operations through JPype and the GridDB Java client.
+
+This is an architectural choice; we haven’t established that it is faster or universally better than the Web API.
+
+### How It Works
 
 A persistent Python worker connects the two runtimes. It keeps the JVM and database store alive across requests, avoiding the overhead of starting them for every operation.
 
@@ -56,6 +62,10 @@ Browser → Node.js HTTP API → NDJSON over stdin/stdout
 
 The browser sends HTTP requests to our application. Node.js sends JSON commands to Python, and Python performs database operations using the native GridDB client. These database operations do not use the GridDB Cloud Web API. The Notification Provider URL uses HTTPS for discovery.
 
+![Native connection sequence from Node.js through Python and the Java client to GridDB Cloud](assets/native-connection-sequence.webp)
+
+*The shared native-client bridge pattern: Node.js sends NDJSON to a persistent Python worker, which calls GridDB through JPype and the Java client. This is a generic connection flow for GridDB Cloud through the native Java client. The parking app follows this same path.*
+
 The worker handles operations serially. See the official [GridDB Python client](https://github.com/griddb/python_client) and [Cloud public native connection article](https://www.griddb.net/en/blog/connecting-to-griddb-cloud-v3-2-from-your-local-dev-environment-no-vpn-no-vnet-peering/) for the client architecture and route configuration.
 
 ## Prerequisites
@@ -66,7 +76,9 @@ Install Node.js 22 or newer. This project uses built-in Node modules for the HTT
 
 ### Python
 
-Python 3.12 is recommended. The macOS setup script uses `python3.12` when available; otherwise, it falls back to the installed `python3`. Install Python 3.12 before running setup if you want the script to use that version. The native runtime needs the GridDB Python package, JPype and PyArrow, which the script installs into the project virtual environment at `apps/native-bridge/.venv/`.
+Python 3.12 is recommended. The macOS setup script uses `python3.12` when available; otherwise, it falls back to the installed `python3`. Install Python 3.12 before running setup if you want the script to use that version.
+
+The native runtime needs the GridDB Python package, JPype and PyArrow, which the script installs into the project virtual environment at `apps/native-bridge/.venv/`.
 
 ### Java and Maven
 
@@ -74,7 +86,7 @@ The GridDB Python client invokes the Java API through JPype. The included macOS 
 
 ### GridDB Cloud
 
-Use a GridDB Cloud service with a supported public native route, such as the GridDB Cloud v3.2. From the portal:
+Use a GridDB Cloud service with a supported public native route. From the portal:
 
 1. Generate the Notification Provider URL.
 2. Add your application's public outbound IP to the GridDB access list.
@@ -94,12 +106,14 @@ The setup script supplies the public libraries; it does not download the license
 
 *GridDB Cloud's library download location.*
 
-
 ## How to Run
 
 ### 1. Clone the repository and enter the application workspace
 
-The application source is available at [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management). To clone the project, use this command:
+The application source is available at [junwatu/smart-parking-management](https://github.com/junwatu/smart-parking-management).
+
+To clone the project, use this command:
+
 ```bash
 git clone https://github.com/junwatu/smart-parking-management.git
 cd smart-parking-management/apps
@@ -123,9 +137,10 @@ Extract the compatible `gridstore-advanced.jar` from the Cloud Java library bund
 ```text
 native-bridge/lib/gridstore-advanced.jar
 ```
+
 Or, extract the downloaded ZIP bundle, then pass the Cloud Java library RPM inside it to the installer. The script extracts the JAR from the RPM and copies it into the runtime directory:
 
-```
+```bash
 npm run install:cloud-jar -- "/path/to/griddb-ee-java-lib-5.9.0-linux.x86_64.rpm"
 ```
 
@@ -142,7 +157,7 @@ The Cloud JAR contains Java bytecode, while JPype and PyArrow require matching p
 
 ### 4. Configure environment variables
 
-From `apps/`, copy the example file:
+From `apps/`, copy the example environment file:
 
 ```bash
 cp native-bridge/.env.example native-bridge/.env
@@ -177,11 +192,15 @@ Doctor checks configuration and local dependencies. A passing doctor check does 
 
 ### 5. Initialize the GridDB containers
 
+Run the command below to initialize the database:
+
 ```bash
 npm run init
 ```
 
 The initializer creates three Collections, one lot-wide TimeSeries and 24 per-space TimeSeries containers. Running it again preserves compatible schemas. An incompatible existing schema stops initialization without deleting its data.
+
+Example output, abbreviated:
 
 ```text
 [
@@ -212,25 +231,43 @@ The initializer creates three Collections, one lot-wide TimeSeries and 24 per-sp
   ...
 ]
 ```
+
 ### 6. Seed parking spaces and start the application
 
+Seed the parking spaces after initializing the containers. This adds missing space metadata and preserves existing rates and sessions.
+
 ```bash
+
 npm run seed
+```
+
+To check the GridDB connection, run this command:
+
+```bash
 npm run dev:griddb
+```
+
+The live server also checks connectivity and seeded space metadata before listening:
+
+```bash
 npm run dev:live
 ```
 
-Seed adds missing space metadata and preserves existing rates and sessions. `dev:griddb` performs a real database check. The live server also checks connectivity and seeded space metadata before listening.
-
-Run one API instance against this container prefix. Multiple instances require coordination to prevent conflicting arrivals.
-
-Open:
+Then open this URL in your browser:
 
 ```text
 http://127.0.0.1:3002
 ```
 
 Click an available space, enter a vehicle tag, and register an arrival. Register a departure from the active-session table. Start the simulator when you want to generate additional activity; it is stopped by default.
+
+You can also run the demo version:
+
+```bash
+npm run dev:demo
+```
+
+Stop the live server before starting demo mode on the same port. Demo data is stored only in memory and is lost when the server stops.
 
 ## System Architecture
 ![Smart parking architecture showing the five system responsibilities](assets/smart-parking-five-system-responsibilities.png)
@@ -257,7 +294,9 @@ GridDB stores space metadata, sessions, events and occupancy samples. Collection
 
 ## GridDB Schema
 
-Parking combines durable business records with time-series occupancy measurements. All container names begin with `PARKING_CONTAINER_PREFIX`; the default prefix is `parking_demo`.
+Parking combines durable business records with time-series occupancy measurements.
+
+All container names begin with `PARKING_CONTAINER_PREFIX` and the default prefix is `parking_demo`.
 
 | Container suffix | Type | Purpose |
 | --- | --- | --- |
@@ -269,7 +308,11 @@ Parking combines durable business records with time-series occupancy measurement
 
 There are 28 containers in this prototype. The prefix separates the application from unrelated data in the same database.
 
+You can see the diagram of the schemas below:
+
 ![GridDB schema: Collections for business records and TimeSeries for occupancy projections](assets/griddb-schema.webp)
+
+The following tables describe the schemas used by this parking app:
 
 ### `spaces` Collection
 
@@ -328,14 +371,21 @@ Using a Collection avoids timestamp collisions between different vehicles' event
 | `session_id` | STRING | Active session UUID, or an empty string |
 | `source` | STRING | `session_projection` for this simulator |
 
-These rows are projections of session state, not measurements from physical sensors. Sessions remain the authority for live availability and fees. Separate containers keep different spaces' samples from sharing a timestamp key. See the [GridDB data model](https://docs.griddb.net/architecture/data-model.html) for the distinction between Collections and TimeSeries.
+These rows are projections of session state, not measurements from physical sensors. Sessions remain the authority for live availability and fees.
+
 ![GridDB Cloud container list showing parking Collections and TimeSeries containers](assets/containers.png)
+
+Separate containers keep different spaces' samples from sharing a timestamp key. See the [GridDB data model](https://docs.griddb.net/architecture/data-model.html) for the distinction between Collections and TimeSeries.
 
 ## Technical Implementation
 
 ### Node.js API Routes
 
-The browser communicates with the HTTP server in `apps/native-bridge/src/server.js`. This server uses Node's built-in `node:http` module to match each request's method and URL path to a parking operation. The same server serves `index.html`, `app.js` and `styles.css` for the dashboard.
+The browser communicates with the HTTP server in `apps/native-bridge/src/server.js`.
+
+This server uses Node's built-in `node:http` module to match each request's method and URL path to a parking operation.
+
+The same server serves `index.html`, `app.js` and `styles.css` for the dashboard.
 
 | Method | Route | Function |
 | --- | --- | --- |
@@ -348,7 +398,11 @@ The browser communicates with the HTTP server in `apps/native-bridge/src/server.
 | POST | `/api/simulator/start` | Start the simulator timer; send an empty JSON object `{}` |
 | POST | `/api/simulator/stop` | Stop the simulator timer; send an empty JSON object `{}` |
 
-POST requests require `Content-Type: application/json`. A new arrival returns HTTP 201; a matching arrival retry returns 200. Successful reads, departures and simulator controls return 200. Invalid parking input returns 400, an unknown session returns 404, an occupancy or session-ID conflict returns 409, and native database failures return 503.
+POST requests require `Content-Type: application/json`. A new arrival returns HTTP 201; a matching arrival retry returns 200.
+
+Successful reads, departures and simulator controls return 200.
+
+Invalid parking input returns 400, an unknown session returns 404, an occupancy or session-ID conflict returns 409, and native database failures return 503.
 
 To see how an HTTP route reaches GridDB, follow a history request:
 
@@ -381,11 +435,13 @@ elif operation in ("park", "depart", "history"):
 
 For this request, that call is `parking.history(req)`. The method executes the occupancy TQL query shown later in this article. The worker converts the result to JSON and writes a response to stdout with the same request ID. Node matches that response to its pending promise and sends the result to the browser. The history response contains `points`, `limit` and `possiblyTruncated`.
 
-The simulator start and stop routes control a timer in Node.js. While running, the timer sends `simulate` commands through the same worker. In demo mode, parking operations go to the in-memory store instead of Python or GridDB.
+The simulator start and stop routes control a timer in Node.js. While running, the timer sends `simulate` commands through the same worker. In demo mode, these parking operations go to the in-memory store instead of Python or GridDB.
 
 ### Starting a persistent Python worker
 
-The Node client in `native-bridge/src/griddb-client.js` starts the worker once. A simplified startup excerpt is:
+The Node client in `native-bridge/src/griddb-client.js` starts the worker once.
+
+A simplified startup excerpt is:
 
 ```javascript
 import { spawn } from 'node:child_process';
@@ -403,7 +459,9 @@ lines.on('line', line => {
 });
 ```
 
-The complete implementation runs this startup logic inside the client constructor. It defines `python`, `workerPath`, `workerEnvironment` and the response handler in that module, and also handles invalid responses and worker failures. Each command occupies one JSON line:
+The complete implementation runs this startup logic inside the client constructor. It defines `python`, `workerPath`, `workerEnvironment` and the response handler in that module, and also handles invalid responses and worker failures.
+
+Each command occupies one JSON line:
 
 ```json
 {"id":12,"operation":"health"}
@@ -415,7 +473,9 @@ The worker returns the same ID:
 {"id":12,"ok":true,"result":{"status":"ok","mode":"native","database":"reachable"}}
 ```
 
-Request IDs match responses with pending Node promises. The Python loop still executes one database operation at a time. The client also supplies the Java Arrow memory-access option, detects worker failure and terminates a worker after a request timeout.
+Request IDs match responses with pending Node promises.
+
+The Python loop still executes one database operation at a time. The client also supplies the Java Arrow memory-access option, detects worker failure and terminates a worker after a request timeout.
 
 ### Loading the GridDB runtime
 
@@ -435,7 +495,7 @@ The complete worker checks that all four required JARs exist before starting the
 
 ### Connecting to GridDB Cloud
 
-The store uses environment values and an optional route:
+The store uses environment values loaded from the `.env` file and an optional route:
 
 ```python
 options = {
@@ -456,13 +516,9 @@ Use uppercase `PUBLIC` for the public native route. An empty route omits the opt
 
 Store creation is lazy. The `health` operation accesses the spaces container to force an actual native request rather than relying on worker readiness.
 
-![Native connection sequence from Node.js through Python and the Java client to GridDB Cloud](assets/native-connection-sequence.webp)
-
-*The shared native-client bridge pattern: Node.js sends NDJSON to a persistent Python worker, which calls GridDB through JPype and the Java client. This is a generic connection flow for GridDB Cloud through the native Java client. The parking app follows this same path.*
-
 ### Creating a Collection
 
-`apps/native-bridge/python/init_schema.py` defines the schemas for all containers. Expanded from its `SPACES` definition, creating the spaces Collection looks like this:
+The Python file `apps/native-bridge/python/init_schema.py` defines the schemas for all containers. Expanded from its `SPACES` definition, creating the spaces Collection looks like this:
 
 ```python
 info = griddb.ContainerInfo(
@@ -481,7 +537,9 @@ container = store.put_container(info, modifiable=False)
 container.close()
 ```
 
-These examples assume the worker has imported `griddb_python as griddb` and created `store`. With `row_key=True`, the first column, `space_id`, identifies each row. The initializer uses the same Collection type for `sessions` and `events`, with their respective schemas. The examples show the default prefix; the initializer builds each name from `PARKING_CONTAINER_PREFIX`.
+These examples assume the worker has imported `griddb_python as griddb` and created `store`. With `row_key=True`, the first column, `space_id`, identifies each row.
+
+The initializer uses the same Collection type for `sessions` and `events`, with their respective schemas. The examples show the default prefix; the initializer builds each name from `PARKING_CONTAINER_PREFIX`.
 
 ### Creating a TimeSeries container
 
@@ -621,7 +679,9 @@ def fee_cents(entered, exited, rate):
 
 At $2.50 per hour, a session lasting exactly one hour costs $2.50. One hour and one second costs $5.00. A repeated departure returns the already completed session without adding another fee.
 
-The dashboard shows an estimated fee while the vehicle is parked. Rates are captured in each session so an existing visit retains its original rate. Final fees are recorded when the departure completes. This is a billing demonstration, not a payment integration. The daily fee summary uses departures since midnight UTC and flags partial totals when the bounded query exceeds 5,000 completed sessions.
+The dashboard shows an estimated fee while the vehicle is parked. Rates are captured in each session so an existing visit retains its original rate.
+
+Final fees are recorded when the departure completes. This is a billing demonstration, not a payment integration.
 
 All native timestamps are Python datetimes. GridDB may return naive UTC datetimes; the worker explicitly attaches UTC before arithmetic and before rewriting the row. Passing an ISO timestamp string to an untyped generic `put` would miss this conversion.
 
@@ -629,7 +689,9 @@ All native timestamps are Python datetimes. GridDB may return naive UTC datetime
 
 Click **Start simulator** to attempt a parking transition every five seconds. It chooses an available space for an arrival or closes one of its simulated sessions. It never selects a manually registered session for a simulated departure. A timer tick is skipped while the previous simulation operation is still running. If all spaces contain manually registered vehicles, the simulator records telemetry without changing any sessions.
 
-In native mode, these events are written to GridDB using the configured prefix. The simulator stops after an error and exposes the reason in the dashboard. Click **Stop simulator** when you want to return to manual operations.
+![Start and stop controls for the parking simulator](assets/start-simulator.png)
+
+In live mode, these events are written to GridDB using the configured prefix. The simulator stops after an error and exposes the reason in the dashboard. Click **Stop simulator** when you want to return to manual operations.
 
 ## Reading Results in Node.js
 
@@ -657,9 +719,20 @@ The dashboard shows:
 - Recent arrival/departure activity.
 - Occupancy history and simulator status.
 
-
 ![Smart parking dashboard showing space availability, active sessions, recorded fees and occupancy history](assets/park-app-dashboard.png)
 
+## Testing
+
+You can run testing from the `apps/` directory:
+
+```bash
+npm run check
+npm test
+cd native-bridge/python
+python3 -m unittest -v test_parking.py
+```
+
+The tests exercise fee boundaries, repeated requests, occupancy conflicts, duplicate vehicles, input validation, HTTP endpoints, simulator controls, timestamp normalization and projection failures. They also check that seeding preserves existing data.
 
 ## Connecting Real Parking Sensors
 
@@ -673,36 +746,6 @@ Parking detector → MQTT → Node ingestion adapter
 ```
 
 This project doesn't include an MQTT subscriber or an external sensor-ingestion endpoint. Adding one requires validated space IDs, timestamps converted to UTC datetimes, duplicate-message handling, and a policy for delayed readings.
-
-Keep observed sensor state separate from session state. If a detector says a space is occupied but there is no active session, flag the disagreement for reconciliation rather than silently creating a billable visit. Similarly, a single noisy vacant reading should not automatically close a paid session.
-
-Reservations, accessible-space eligibility and payment authorization are separate business rules that can be added once the basic session flow is reliable.
-
-## What Uses HTTP and What Does Not?
-
-| Connection | Transport | Purpose |
-| --- | --- | --- |
-| Browser → Node.js | Local HTTP | Dashboard, arrivals, departures and history |
-| Node.js → Python | NDJSON over process stdin/stdout | Named application commands and responses |
-| Native client → Notification Provider | HTTPS | Discover Cloud connection information |
-| Native client → GridDB Cloud | Native database protocol, with Cloud SSL configuration | Schema creation, row reads/writes and TQL queries |
-
-The local HTTP endpoints are application APIs. They do not forward operations to the GridDB Cloud Web API. The native Python/JVM client performs the database work, and GridDB credentials remain in the server environment.
-
-The default server binds to `127.0.0.1`. A public deployment needs HTTPS and operator authentication before exposing arrival, departure or simulator controls.
-
-## Testing
-
-Run the checks from `apps/`:
-```bash
-npm run check
-npm test
-cd native-bridge/python
-python3 -m unittest -v test_parking.py
-```
-The tests exercise fee boundaries, repeated requests, occupancy conflicts, duplicate vehicles, input validation, HTTP endpoints, simulator controls, timestamp normalization and projection failures. They also check that seeding preserves existing data.
-
-For native verification, repeat schema initialization, confirm the containers remain unchanged, start the API, register a vehicle, close its session and check the history after several simulator events.
 
 ## Further Enhancements
 
